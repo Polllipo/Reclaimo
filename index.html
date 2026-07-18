@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reclaimo — Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F6F7F9; --surface:#FFFFFF; --raised:#FAFAFB; --inset:#F6F7F9;
+  --border:#E3E6EB; --border-soft:#EEF0F3; --border-input:#CFD4DC;
+  --ink:#161A22; --body:#4F5665; --muted:#6C7484; --faint:#9AA1AE;
+  --accent:#5851DB; --accent-strong:#463FBC; --accent-hover:#463FBC; --accent-tint:#F0F0FE; --accent-tint-border:#CDCBFB;
+  --succ-bg:#ECFDF3; --succ-dot:#12B76A; --succ-tx:#067647;
+  --warn-bg:#FFFAEB; --warn-dot:#F79009; --warn-tx:#B54708;
+  --err-bg:#FEF3F2;  --err-dot:#F04438;  --err-tx:#B42318;
+  --info-bg:#EFF6FF; --info-dot:#3B82F6; --info-tx:#1D4ED8;
+  --neut-bg:#EEF0F3; --neut-dot:#9AA1AE; --neut-tx:#4F5665;
+  --shadow-sm:0 1px 2px rgba(16,24,40,.05);
+  --shadow-md:0 4px 12px -2px rgba(16,24,40,.08);
+  --shadow-lg:0 12px 32px -6px rgba(16,24,40,.16);
+}
+[data-theme="dark"]{
+  --canvas:#10131A; --surface:#161A22; --raised:#1B2029; --inset:#12151C;
+  --border:#262B36; --border-soft:#262B36; --border-input:#3A404D;
+  --ink:#F6F7F9; --body:#CFD4DC; --muted:#9AA1AE; --faint:#6C7484;
+  --accent:#6E67E6; --accent-strong:#ACA9F5; --accent-hover:#8B86EF; --accent-tint:#26235C; --accent-tint-border:#38339A;
+  --succ-bg:#132C1E; --succ-tx:#5CD695;
+  --warn-bg:#33270E; --warn-tx:#F5B356;
+  --err-bg:#361715;  --err-tx:#F58E86;
+  --info-bg:#14243B; --info-tx:#7AACF8;
+  --neut-bg:#262B36; --neut-tx:#CFD4DC;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:0 4px 12px -2px rgba(0,0,0,.4);
+  --shadow-lg:0 12px 32px -6px rgba(0,0,0,.55);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--canvas);color:var(--ink);font-size:14px;transition:background .25s,color .25s}
+.app{display:flex;height:100vh;overflow:hidden}
+/* ---------- sidebar ---------- */
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border-soft);display:flex;flex-direction:column;padding:20px 16px;flex-shrink:0}
+.logo{display:flex;align-items:center;gap:8px;padding:0 12px 18px;font-weight:600;font-size:16px}
+.logo .mark{width:18px;height:18px;background:var(--accent);transform:rotate(45deg);border-radius:4px}
+.navgroup{font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--faint);padding:10px 12px 4px}
+.nav{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;color:var(--body);cursor:pointer;user-select:none;margin-bottom:2px}
+.nav svg{width:16px;height:16px;stroke:var(--faint);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.nav:hover{background:var(--raised)}
+.nav.active{background:var(--accent-tint);color:var(--accent-strong);font-weight:500}
+.nav.active svg{stroke:var(--accent)}
+.spacer{flex:1}
+.user{display:flex;align-items:center;gap:10px;border:1px solid var(--border-soft);border-radius:8px;padding:10px 12px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent-tint);color:var(--accent-strong);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.user b{display:block;font-size:13px;font-weight:500}.user span{font-size:11px;color:var(--faint)}
+/* ---------- main ---------- */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{display:flex;align-items:center;gap:14px;background:var(--surface);border-bottom:1px solid var(--border-soft);padding:14px 32px}
+.topbar h1{font-size:20px;font-weight:600}
+.top-search{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--inset);border-radius:8px;padding:8px 12px;color:var(--faint);font-size:13px;width:220px}
+.iconbtn{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;color:var(--body)}
+.iconbtn:hover{background:var(--raised)}
+.iconbtn .dot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--err-dot);border:1.5px solid var(--surface)}
+.content{flex:1;overflow-y:auto;padding:28px 32px;position:relative}
+/* ---------- components ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-sm)}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:500;white-space:nowrap}
+.badge i{width:6px;height:6px;border-radius:50%;display:inline-block}
+.b-inreview{background:var(--info-bg);color:var(--info-tx)}.b-inreview i{background:var(--info-dot)}
+.b-approved{background:var(--succ-bg);color:var(--succ-tx)}.b-approved i{background:var(--succ-dot)}
+.b-paid{background:var(--accent-tint);color:var(--accent-strong)}.b-paid i{background:var(--accent)}
+.b-pending{background:var(--warn-bg);color:var(--warn-tx)}.b-pending i{background:var(--warn-dot)}
+.b-rejected{background:var(--err-bg);color:var(--err-tx)}.b-rejected i{background:var(--err-dot)}
+.b-needsevidence{background:var(--neut-bg);color:var(--neut-tx)}.b-needsevidence i{background:var(--neut-dot)}
+.btn{border:none;border-radius:8px;padding:9px 16px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:filter .15s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{filter:brightness(.92)}
+.btn-secondary{background:var(--surface);color:var(--body);border:1px solid var(--border-input)}.btn-secondary:hover{background:var(--raised)}
+.btn-danger-ghost{background:var(--surface);color:var(--err-tx);border:1px solid var(--border-input)}
+.btn-destructive{background:#D92D20;color:#fff}
+.chip{border-radius:999px;border:1px solid var(--border-input);background:var(--surface);color:var(--body);padding:7px 12px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.chip.sel{background:var(--ink);color:var(--canvas);border-color:var(--ink)}
+/* dashboard */
+.metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px}
+.metric{padding:18px 20px}
+.metric .k{font-size:13px;font-weight:500;color:var(--muted)}
+.metric .v{font-size:26px;font-weight:600;margin:4px 0 2px}
+.metric .s{font-size:12px;font-weight:500}
+.row2{display:grid;grid-template-columns:1fr 380px;gap:20px;margin-bottom:24px}
+.chart-card{padding:18px 20px}
+.chart-head{display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:16px;margin-bottom:16px}
+.bars{display:flex;align-items:flex-end;gap:28px;height:210px;padding-top:8px}
+.bar-w{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
+.bar{width:40px;height:0;border-radius:6px;background:linear-gradient(180deg,var(--accent),rgba(139,134,239,.5));transition:height .8s cubic-bezier(.34,1.4,.5,1),filter .15s;cursor:pointer}
+.bar:hover{filter:brightness(1.12)}
+.bar-w span{font-size:12px;color:var(--faint)}
+.tip{position:absolute;top:-6px;left:50%;transform:translateX(-50%) translateY(6px);background:var(--ink);color:var(--canvas);font-size:11px;font-weight:500;border-radius:6px;padding:4px 8px;opacity:0;pointer-events:none;transition:.2s;white-space:nowrap}
+.bar-w:hover .tip{opacity:1;transform:translateX(-50%) translateY(0)}
+.action-card{padding:18px 20px}
+.action-card h3{font-size:16px;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.count-pill{background:var(--err-bg);color:var(--err-tx);border-radius:999px;font-size:12px;padding:2px 8px;font-weight:500}
+.action-item{background:var(--raised);border:1px solid var(--border-soft);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.action-item .t{display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:5px}
+.sev{width:8px;height:8px;border-radius:50%}
+.action-item p{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:6px}
+.action-item a{font-size:13px;color:var(--accent);font-weight:500;text-decoration:none;cursor:pointer}
+/* table */
+.tablecard{overflow:hidden;display:flex;flex-direction:column}
+.tc-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;font-weight:600;font-size:16px}
+.tc-head a{font-size:13px;color:var(--accent);font-weight:500;cursor:pointer;text-decoration:none}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--muted);text-align:left;background:var(--inset);padding:10px 12px}
+th:first-child,td:first-child{padding-left:20px}
+td{padding:12px;border-top:1px solid var(--border-soft);vertical-align:middle}
+tr.rowlink{cursor:pointer}
+tr.rowlink:hover td{background:var(--raised)}
+tr.selected td{background:var(--raised)}
+.cellmain{font-weight:500}.cellsub{font-size:12px;color:var(--faint);margin-top:1px}
+.amount{font-weight:500}
+.recov{color:var(--succ-tx);font-weight:500}
+.dim{color:var(--faint)}
+.cb{width:16px;height:16px;border:1.5px solid var(--border-input);border-radius:4px;background:var(--surface);cursor:pointer;appearance:none;vertical-align:middle}
+.cb:checked{background:var(--accent);border-color:var(--accent);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");background-size:10px;background-position:center;background-repeat:no-repeat}
+.pag{display:flex;align-items:center;gap:8px;padding:12px 20px;border-top:1px solid var(--border-soft);font-size:12px;color:var(--muted);margin-top:auto}
+/* toolbar */
+.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border-input);border-radius:8px;padding:9px 12px;width:280px;color:var(--faint)}
+.search input{border:none;outline:none;background:none;font-family:inherit;font-size:13px;color:var(--ink);width:100%}
+/* bulk bar */
+.bulkbar{position:absolute;left:50%;transform:translateX(-50%) translateY(20px);bottom:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:14px;padding:12px 16px;opacity:0;pointer-events:none;transition:.25s}
+.bulkbar.on{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.bulkbar .sep{width:1px;height:22px;background:var(--border)}
+.bulkbar .clear{color:var(--muted);cursor:pointer;font-weight:500;font-size:13px}
+/* detail */
+.crumb{font-size:12px;color:var(--faint);margin-bottom:4px}
+.dhead{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.dhead h2{font-size:22px;font-weight:600;margin-right:auto}
+.banner{display:flex;align-items:center;gap:10px;background:var(--info-bg);border:1px solid var(--info-tx);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--info-tx);margin-bottom:20px}
+.banner i{width:8px;height:8px;border-radius:50%;background:var(--info-dot);flex-shrink:0}
+.banner .vp{margin-left:auto;font-weight:500;cursor:pointer;white-space:nowrap}
+.dcols{display:grid;grid-template-columns:1fr 360px;gap:20px}
+.dcard{padding:18px 20px;margin-bottom:20px}
+.dcard h3{font-size:16px;margin-bottom:14px;display:flex;align-items:center}
+.dcard h3 a{margin-left:auto;font-size:13px;color:var(--accent);font-weight:500;cursor:pointer}
+.facts{display:flex;gap:32px;flex-wrap:wrap}
+.fact .k{font-size:12px;color:var(--faint)}.fact .v{font-weight:500;margin-top:3px}
+.ev{display:flex;align-items:center;gap:12px;background:var(--raised);border:1px solid var(--border-soft);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.ev .ic{width:28px;height:28px;border-radius:6px;background:var(--accent-tint);flex-shrink:0}
+.ev b{font-size:13px;font-weight:500;display:block}.ev span{font-size:12px;color:var(--faint)}
+.ev a{margin-left:auto;color:var(--accent);font-weight:500;font-size:13px;cursor:pointer}
+.step{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.ring{width:18px;height:18px;border-radius:50%;border:2px solid var(--border-input);background:var(--surface);flex-shrink:0}
+.ring.done{background:var(--succ-dot);border-color:var(--succ-dot)}
+.ring.cur{border-color:var(--accent)}
+.step b{font-size:13px;font-weight:500;display:block}.step span{font-size:11px;color:var(--faint)}
+.step.up b{color:var(--faint)}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--body);margin-bottom:9px}
+.check i{width:14px;height:14px;border-radius:50%;background:var(--succ-bg);border:1.5px solid var(--succ-dot);flex-shrink:0}
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(22,26,34,.45);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:.2s;z-index:50}
+.overlay.on{opacity:1;pointer-events:auto}
+.modal{background:var(--surface);border-radius:16px;box-shadow:var(--shadow-lg);width:460px;max-width:92vw;transform:translateY(12px);transition:.25s}
+.overlay.on .modal{transform:none}
+.m-body{padding:26px 28px 8px}
+.m-body h3{font-size:19px;margin-bottom:6px}
+.m-sub{font-size:13px;font-weight:500;color:var(--body);margin-bottom:12px}
+.m-amount{background:var(--inset);border-radius:10px;padding:12px 16px;margin-bottom:12px}
+.m-amount .k{font-size:12px;color:var(--faint)}.m-amount .v{font-size:22px;font-weight:600}
+.m-note{font-size:13px;color:var(--muted);line-height:1.55}
+.m-foot{display:flex;justify-content:flex-end;gap:12px;padding:16px 28px 24px}
+.reasons{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}
+.reason{border:1px solid var(--border-input);background:var(--surface);color:var(--body);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.reason.sel{background:var(--ink);color:var(--canvas);border-color:var(--ink)}
+textarea{width:100%;border:1px solid var(--border-input);border-radius:8px;background:var(--surface);color:var(--ink);font-family:inherit;font-size:13px;padding:10px 12px;resize:vertical;min-height:64px;outline:none}
+textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-tint)}
+.m-warn{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);margin-top:10px}
+.m-warn i{width:8px;height:8px;border-radius:50%;background:var(--warn-dot)}
+.req-hint{font-size:12px;color:var(--err-tx);display:none;margin-top:4px}
+/* toast */
+.toast{position:fixed;bottom:28px;right:28px;background:#161A22;color:#fff;border-radius:12px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:12px;padding:13px 16px;transform:translateY(90px);transition:.35s cubic-bezier(.2,.8,.2,1);z-index:60;max-width:430px}
+[data-theme="dark"] .toast{background:#262B36}
+.toast.on{transform:none}
+.toast .tico{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px}
+.toast b{font-size:14px;font-weight:500;display:block}.toast span{font-size:12px;color:#9AA1AE}
+.toast button{margin-left:6px;background:none;border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+/* empty + sources view */
+.empty{border:1.5px dashed var(--border-input);border-radius:12px;background:var(--surface);padding:56px 48px;text-align:center}
+.empty .circ{width:56px;height:56px;border-radius:50%;background:var(--accent-tint);margin:0 auto 14px;display:flex;align-items:center;justify-content:center}
+.empty h3{font-size:18px;margin-bottom:8px}
+.empty p{font-size:13px;color:var(--muted);max-width:420px;margin:0 auto 16px;line-height:1.55}
+.srcrow{display:flex;align-items:center;gap:12px;background:var(--raised);border:1px solid var(--border-soft);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.srcrow .ic{width:32px;height:32px;border-radius:8px;background:var(--accent-tint);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.srcrow .ic svg{width:16px;height:16px;stroke:var(--accent-strong);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.srcrow b{display:block;font-size:14px;font-weight:500}.srcrow span{font-size:12px;color:var(--faint)}
+.srcrow .badge{margin-left:auto}
+.hint{position:fixed;bottom:24px;left:264px;font-size:12px;color:var(--faint);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:7px 14px;box-shadow:var(--shadow-sm);z-index:40}
+.view{display:none}.view.on{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><div class="mark"></div>Reclaimo</div>
+    <div class="navgroup">WORKSPACE</div>
+    <div class="nav" data-view="dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</div>
+    <div class="nav" data-view="claims"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Claims</div>
+    <div class="nav" data-view="report"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Recovery report</div>
+    <div class="nav" data-view="sources"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 5v14c0 1.66-4 3-9 3s-9-1.34-9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>Data sources</div>
+    <div class="navgroup">ACCOUNT</div>
+    <div class="nav"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Billing</div>
+    <div class="nav"><svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>Settings</div>
+    <div class="spacer"></div>
+    <div class="user"><div class="avatar">MK</div><div><b>Maya Kovac</b><span>Finance admin</span></div></div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <h1 id="pagetitle">Dashboard</h1>
+      <div class="top-search">⌕&nbsp; Search</div>
+      <button class="iconbtn" id="themeToggle" title="Toggle night mode">☾</button>
+      <button class="iconbtn" title="Notifications">🔔<span class="dot"></span></button>
+      <div class="avatar">MK</div>
+    </div>
+    <div class="content" id="content">
+
+      <!-- DASHBOARD -->
+      <div class="view on" id="view-dashboard">
+        <div class="metrics">
+          <div class="card metric"><div class="k">Recoverable estimate</div><div class="v" data-cu="17240" data-pre="$">$17,240</div><div class="s" style="color:var(--accent)"><span data-cu="868">868</span> open opportunities</div></div>
+          <div class="card metric"><div class="k">Recovered to date</div><div class="v" data-cu="248590" data-pre="$">$248,590</div><div class="s" style="color:var(--succ-tx)">↑ 12.4% vs last quarter</div></div>
+          <div class="card metric"><div class="k">In review</div><div class="v" id="m-inreview" data-cu="5470" data-pre="$">$5,470</div><div class="s" style="color:var(--warn-tx)">10 claims awaiting decision</div></div>
+        </div>
+        <div class="row2">
+          <div class="card chart-card">
+            <div class="chart-head">Recoveries · last 6 months <span style="font-size:13px;color:var(--body);font-weight:500">Monthly ▾</span></div>
+            <div class="bars" id="bars"></div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:14px;font-size:12px;color:var(--muted)"><i style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block"></i> Approved recoveries ($)</div>
+          </div>
+          <div class="card action-card">
+            <h3>Action needed <span class="count-pill">2</span></h3>
+            <div class="action-item"><div class="t"><span class="sev" style="background:var(--err-dot)"></span>Permissions incomplete</div><p>Data access could not be verified. Re-authorize the connection to keep claims flowing.</p><a onclick="go('sources')">Fix permissions →</a></div>
+            <div class="action-item"><div class="t"><span class="sev" style="background:var(--warn-dot)"></span>Invoice due in 5 days</div><p>Your July invoice is ready. Review it before auto-payment on Jul 16.</p><a>View invoice →</a></div>
+          </div>
+        </div>
+        <div class="card tablecard">
+          <div class="tc-head">Recent claims <a onclick="go('claims')">View all claims →</a></div>
+          <table><thead><tr><th>CLAIM</th><th>SUBMITTED</th><th>AMOUNT</th><th>STATUS</th><th>OWNER</th></tr></thead>
+          <tbody id="dashrows"></tbody></table>
+        </div>
+      </div>
+
+      <!-- CLAIMS -->
+      <div class="view" id="view-claims">
+        <div class="toolbar">
+          <div class="search">⌕<input placeholder="Search by claim ID, type, amount…" id="q" oninput="renderClaims()"></div>
+          <button class="chip sel" data-f="all" onclick="setFilter(this)">All · <span id="c-all"></span></button>
+          <button class="chip" data-f="Needs evidence" onclick="setFilter(this)">Needs evidence</button>
+          <button class="chip" data-f="In review" onclick="setFilter(this)">In review</button>
+          <button class="chip" data-f="Approved" onclick="setFilter(this)">Approved</button>
+          <button class="chip" data-f="Paid" onclick="setFilter(this)">Paid</button>
+          <span style="margin-left:auto"></span>
+          <button class="btn btn-secondary">Export CSV</button>
+          <button class="btn btn-primary" onclick="toast('info','New claim','The guided 3-step drawer opens here in the full product.')">+ New claim</button>
+        </div>
+        <div class="card tablecard">
+          <table><thead><tr><th style="width:36px"></th><th>CLAIM</th><th>SUBMITTED</th><th>ESTIMATE</th><th>RECOVERED</th><th>STATUS</th><th>OWNER</th></tr></thead>
+          <tbody id="claimrows"></tbody></table>
+          <div class="pag"><span id="pagcount"></span><span style="margin-left:auto">‹ &nbsp;1&nbsp; ›</span></div>
+        </div>
+      </div>
+
+      <!-- DETAIL -->
+      <div class="view" id="view-detail">
+        <div class="crumb">Claims / <span id="d-id"></span></div>
+        <div class="dhead"><h2 id="d-title"></h2><span id="d-badge"></span>
+          <button class="btn btn-danger-ghost" onclick="openReject()">Reject</button>
+          <button class="btn btn-primary" onclick="openApprove()">Approve claim</button>
+        </div>
+        <div class="banner"><i></i><b style="font-weight:500">You're the approver for this claim</b><span style="opacity:.85">· Submitted Jul 2 · SLA: 9 of 14 days remaining · all 4 checks passed</span><span class="vp">View approval policy →</span></div>
+        <div class="dcols">
+          <div>
+            <div class="card dcard"><h3>Claim summary</h3>
+              <div class="facts">
+                <div class="fact"><div class="k">Estimated amount</div><div class="v" id="d-amount"></div></div>
+                <div class="fact"><div class="k">Claim type</div><div class="v" id="d-type"></div></div>
+                <div class="fact"><div class="k">Submitted</div><div class="v" id="d-date"></div></div>
+                <div class="fact"><div class="k">Source</div><div class="v">Warehouse feed</div></div>
+                <div class="fact"><div class="k">Reference</div><div class="v">ORD-88213</div></div>
+              </div>
+            </div>
+            <div class="card dcard"><h3>Evidence <a>+ Add evidence</a></h3>
+              <div class="ev"><div class="ic"></div><div><b>inventory-report-jun.pdf</b><span>2.4 MB · added Jul 2</span></div><a>View</a></div>
+              <div class="ev"><div class="ic"></div><div><b>damage-photos.zip</b><span>8.1 MB · added Jul 2</span></div><a>View</a></div>
+            </div>
+            <div class="card dcard"><h3>Activity</h3>
+              <div style="font-size:13px;color:var(--body);line-height:1.6;margin-bottom:10px"><b style="color:var(--ink)">A. Rivera</b> <span style="color:var(--faint);font-size:11px">Jul 3 · 09:12</span><br>Verified against the June inventory report — quantities match the damage log.</div>
+              <div style="font-size:13px;color:var(--body);line-height:1.6;margin-bottom:12px"><b style="color:var(--ink)">System</b> <span style="color:var(--faint);font-size:11px">Jul 2 · 14:32</span><br>Claim auto-detected from warehouse reconciliation feed. Confidence: high.</div>
+              <input style="width:100%;border:1px solid var(--border-input);border-radius:8px;background:var(--surface);color:var(--ink);font-family:inherit;font-size:13px;padding:10px 12px;outline:none" placeholder="Add a note…">
+            </div>
+          </div>
+          <div>
+            <div class="card dcard"><h3>Progress</h3><div id="d-steps"></div></div>
+            <div class="card dcard"><h3>Validation</h3>
+              <div class="check"><i></i>Amount within policy limit</div>
+              <div class="check"><i></i>Evidence attached</div>
+              <div class="check"><i></i>No duplicate claim found</div>
+              <div class="check"><i></i>Reference verified</div>
+            </div>
+            <div class="card dcard"><h3>Assigned to</h3>
+              <div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:36px;height:36px">AR</div><div><b style="font-size:14px;font-weight:500">Alex Rivera</b><div style="font-size:12px;color:var(--faint)">Claims specialist</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORT -->
+      <div class="view" id="view-report">
+        <div class="row2" style="grid-template-columns:1fr 360px">
+          <div class="card metric"><div class="k">Estimated recoverable</div><div class="v" style="font-size:28px"><span data-cu="14800" data-pre="$">$14,800</span> – <span data-cu="17600" data-pre="$">$17,600</span></div><div class="s" style="color:var(--faint);font-weight:400">Range reflects claim-level confidence. Updates after each daily detection run.</div></div>
+          <div class="card metric"><div class="k">Detection status</div><div class="v" style="font-size:16px;display:flex;align-items:center;gap:8px"><i style="width:8px;height:8px;border-radius:50%;background:var(--succ-dot);display:inline-block"></i>Up to date</div><div class="s" style="color:var(--faint);font-weight:400">Last run today · 04:00 · 868 opportunities found</div></div>
+        </div>
+        <div class="card tablecard">
+          <div class="tc-head">Breakdown by claim type <a>Export report</a></div>
+          <div id="breakdown"></div>
+          <div style="display:flex;gap:8px;align-items:center;padding:12px 20px;font-size:12px;color:var(--muted)"><i style="width:12px;height:12px;border-radius:50%;background:var(--info-bg);border:1.5px solid var(--info-dot);display:inline-block"></i>Types with $0 currently have no detectable opportunities — they stay visible so you can trust the coverage.</div>
+        </div>
+      </div>
+
+      <!-- SOURCES -->
+      <div class="view" id="view-sources">
+        <div class="card dcard"><h3>Connected sources <a><button class="btn btn-primary" style="font-size:13px">+ Connect source</button></a></h3>
+          <div class="srcrow"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1.5"/><circle cx="19" cy="21" r="1.5"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57L23 6H6.12"/></svg></div><div><b>Commerce platform</b><span>Orders, shipments &amp; fees · synced 12 min ago</span></div><span class="badge b-approved"><i></i>Connected</span></div>
+          <div class="srcrow"><div class="ic"><svg viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><div><b>Warehouse feed</b><span>Inventory reconciliation · synced 1 hr ago</span></div><span class="badge b-approved"><i></i>Connected</span></div>
+          <div class="srcrow"><div class="ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><div><b>Accounting export</b><span>Invoice matching · authorization expired</span></div><span class="badge b-pending"><i></i>Needs attention</span></div>
+        </div>
+        <div class="empty">
+          <div class="circ"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <h3>No expense feeds yet</h3>
+          <p>Connect an expense feed to detect reimbursable employee costs alongside marketplace recoveries. Setup takes about five minutes.</p>
+          <button class="btn btn-primary">Connect expense feed</button>
+          <button class="btn btn-secondary" style="margin-left:8px">Learn more</button>
+        </div>
+      </div>
+
+      <!-- bulk bar -->
+      <div class="bulkbar" id="bulkbar">
+        <b id="selcount" style="font-size:14px;font-weight:500">1 selected</b>
+        <div class="sep"></div>
+        <button class="btn btn-primary" onclick="bulkApprove()">Approve</button>
+        <button class="btn btn-danger-ghost" onclick="openReject()">Reject…</button>
+        <button class="btn btn-secondary">Export</button>
+        <span class="clear" onclick="clearSel()">✕ Clear</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APPROVE MODAL -->
+<div class="overlay" id="approveModal">
+  <div class="modal">
+    <div class="m-body">
+      <h3>Approve this claim?</h3>
+      <div class="m-sub" id="am-sub"></div>
+      <div class="m-amount"><div class="k">Amount to approve</div><div class="v" id="am-amount"></div></div>
+      <p class="m-note">Approval moves this claim to payment processing and notifies the account owner. The decision is recorded in the audit log and <b>can be reversed within 24 hours</b>.</p>
+    </div>
+    <div class="m-foot"><button class="btn btn-secondary" onclick="closeModals()">Cancel</button><button class="btn btn-primary" onclick="confirmApprove()">Approve claim</button></div>
+  </div>
+</div>
+
+<!-- REJECT MODAL -->
+<div class="overlay" id="rejectModal">
+  <div class="modal">
+    <div class="m-body">
+      <h3>Reject this claim?</h3>
+      <div class="m-sub" id="rm-sub"></div>
+      <p class="m-note" style="margin-bottom:10px">A reason is required. It is recorded in the audit log and shared with the claim owner so they can fix and resubmit.</p>
+      <div style="font-size:12px;font-weight:500;color:var(--body)">Reason *</div>
+      <div class="reasons" id="reasons"></div>
+      <div class="req-hint" id="reqhint">Please choose a reason — the owner needs it to resubmit.</div>
+      <textarea placeholder="Add details for the claim owner (optional)…"></textarea>
+      <div class="m-warn"><i></i>The owner is notified immediately and can resubmit with new evidence.</div>
+    </div>
+    <div class="m-foot"><button class="btn btn-secondary" onclick="closeModals()">Cancel</button><button class="btn btn-destructive" onclick="confirmReject()">Reject claim</button></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="tico" id="t-ico"></div>
+  <div><b id="t-title"></b><span id="t-sub"></span></div>
+  <button id="t-action" onclick="undo()">Undo · 24h</button>
+</div>
+
+<div class="hint" id="hint">Prototype — try: open Claims · select rows · approve or reject a claim · toggle ☾ night mode</div>
+
+<script>
+const claims=[
+ {id:"CLM-10482",title:"Damaged inventory adjustment",type:"Damage",date:"Jul 2",est:"$1,240.00",estN:1240,rec:null,status:"In review",owner:"A. Rivera"},
+ {id:"CLM-10471",title:"Lost shipment · inbound",type:"Loss",date:"Jun 28",est:"$3,812.40",estN:3812.4,rec:"$3,812.40",status:"Approved",owner:"M. Chen"},
+ {id:"CLM-10465",title:"Overcharged handling fee",type:"Fees",date:"Jun 25",est:"$486.00",estN:486,rec:"$486.00",status:"Paid",owner:"A. Rivera"},
+ {id:"CLM-10461",title:"Missing units after transfer",type:"Loss",date:"Jun 23",est:"$1,905.10",estN:1905.1,rec:null,status:"Pending",owner:"M. Chen"},
+ {id:"CLM-10458",title:"Returned item not restocked",type:"Returns",date:"Jun 21",est:"$92.75",estN:92.75,rec:null,status:"Rejected",owner:"S. Okafor"},
+ {id:"CLM-10450",title:"Duplicate fulfilment charge",type:"Fees",date:"Jun 18",est:"$220.00",estN:220,rec:"$220.00",status:"Paid",owner:"S. Okafor"},
+ {id:"CLM-10447",title:"Damaged in transit · order 8841",type:"Damage",date:"Jun 15",est:"$674.20",estN:674.2,rec:null,status:"Needs evidence",owner:"—"}
+];
+const sel=new Set();
+let filter="all", currentClaim=null, lastAction=null, toastTimer=null;
+const $=id=>document.getElementById(id);
+function badge(s){return `<span class="badge b-${s.toLowerCase().replace(/ /g,'')}"><i></i>${s}</span>`}
+
+/* nav */
+document.querySelectorAll('.nav[data-view]').forEach(n=>n.onclick=()=>go(n.dataset.view));
+function go(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  $('view-'+v).classList.add('on');
+  document.querySelectorAll('.nav[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
+  $('pagetitle').textContent={dashboard:'Dashboard',claims:'Claims',detail:'Claims',report:'Recovery report',sources:'Data sources'}[v];
+  if(v!=='claims'){ $('bulkbar').classList.remove('on'); }
+  else updateBulk();
+  if(v==='dashboard'){ animateBars(); countUpIn('#view-dashboard'); }
+  if(v==='report'){ animateBreakdown(); countUpIn('#view-report'); }
+}
+/* theme */
+$('themeToggle').onclick=()=>{
+  const h=document.documentElement;
+  h.dataset.theme = h.dataset.theme==='light'?'dark':'light';
+  $('themeToggle').textContent = h.dataset.theme==='light'?'☾':'☀';
+};
+/* dashboard */
+const barsData=[[120,'Feb','$28.4K'],[90,'Mar','$21.1K'],[150,'Apr','$35.6K'],[110,'May','$26.0K'],[180,'Jun','$42.8K'],[210,'Jul','$49.9K']];
+$('bars').innerHTML=barsData.map(([h,m,v])=>`<div class="bar-w"><div class="tip">${v}</div><div class="bar" data-h="${h}"></div><span>${m}</span></div>`).join('');
+function animateBars(){
+  document.querySelectorAll('.bar').forEach((b,i)=>{
+    b.style.transitionDelay='0s';
+    b.style.height='0px';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      b.style.transitionDelay=(i*90)+'ms';
+      b.style.height=b.dataset.h+'px';
+    }));
+  });
+}
+function renderDash(){
+  $('dashrows').innerHTML=claims.slice(0,4).map(c=>`<tr class="rowlink" onclick="openDetail('${c.id}')">
+    <td><div class="cellmain">${c.title}</div><div class="cellsub">${c.id}</div></td>
+    <td class="dim">${c.date}, 2026</td><td class="amount">${c.est}</td><td>${badge(c.status)}</td><td class="dim">${c.owner}</td></tr>`).join('');
+}
+/* claims */
+function setFilter(el){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel'); filter=el.dataset.f; renderClaims();
+}
+function renderClaims(){
+  const q=($('q').value||'').toLowerCase();
+  const list=claims.filter(c=> (filter==='all'||c.status===filter) && (c.title+c.id+c.est).toLowerCase().includes(q));
+  $('c-all').textContent=claims.length+' ';
+  document.querySelectorAll('.chip').forEach(ch=>{
+    if(ch.dataset.f!=='all'){ const n=claims.filter(c=>c.status===ch.dataset.f).length;
+      ch.innerHTML=ch.dataset.f+' · '+n; }
+  });
+  $('claimrows').innerHTML=list.map(c=>`<tr class="rowlink ${sel.has(c.id)?'selected':''}">
+    <td onclick="event.stopPropagation()"><input type="checkbox" class="cb" ${sel.has(c.id)?'checked':''} onchange="toggleSel('${c.id}')"></td>
+    <td onclick="openDetail('${c.id}')"><div class="cellmain">${c.title}</div><div class="cellsub">${c.id} · ${c.type}</div></td>
+    <td class="dim" onclick="openDetail('${c.id}')">${c.date}</td>
+    <td class="amount" onclick="openDetail('${c.id}')">${c.est}</td>
+    <td onclick="openDetail('${c.id}')" class="${c.rec?'recov':'dim'}">${c.rec||'—'}</td>
+    <td onclick="openDetail('${c.id}')">${badge(c.status)}</td>
+    <td class="dim" onclick="openDetail('${c.id}')">${c.owner}</td></tr>`).join('');
+  $('pagcount').textContent=`Showing 1–${list.length} of 246 claims`;
+}
+function toggleSel(id){ sel.has(id)?sel.delete(id):sel.add(id); renderClaims(); updateBulk(); }
+function clearSel(){ sel.clear(); renderClaims(); updateBulk(); }
+function updateBulk(){
+  const on=sel.size>0 && $('view-claims').classList.contains('on');
+  $('bulkbar').classList.toggle('on',on);
+  $('selcount').textContent=sel.size+' selected';
+}
+/* detail */
+function openDetail(id){
+  currentClaim=claims.find(c=>c.id===id);
+  $('d-id').textContent=id; $('d-title').textContent=currentClaim.title;
+  $('d-amount').textContent=currentClaim.est; $('d-type').textContent=currentClaim.type;
+  $('d-date').textContent=currentClaim.date+', 2026';
+  renderDetailStatus();
+  go('detail');
+}
+function renderDetailStatus(){
+  $('d-badge').innerHTML=badge(currentClaim.status);
+  const s=currentClaim.status;
+  const steps=[["Detected","Jul 2 · 14:32","done"],["Submitted","Jul 2 · 16:05","done"],
+    ["In review", s==="In review"?"Started Jul 3":"Jul 3 – Jul 12", ["Approved","Paid","Rejected"].includes(s)?"done":s==="In review"?"cur":"up"],
+    ["Decision", s==="Approved"?"Approved today":s==="Rejected"?"Rejected today":"Pending", ["Approved","Paid","Rejected"].includes(s)?"done":"up"],
+    ["Payment", s==="Paid"?"Paid":"Pending", s==="Paid"?"done":"up"]];
+  $('d-steps').innerHTML=steps.map(([t,d,st])=>`<div class="step ${st==='up'?'up':''}"><div class="ring ${st==='done'?'done':st==='cur'?'cur':''}"></div><div><b>${t}</b><span>${d}</span></div></div>`).join('');
+}
+/* modals */
+function openApprove(){
+  $('am-sub').textContent=currentClaim.id+' · '+currentClaim.title;
+  $('am-amount').textContent=currentClaim.est;
+  $('approveModal').classList.add('on');
+}
+let rejectReason=null;
+const reasonList=["Insufficient evidence","Duplicate claim","Out of policy","Amount mismatch","Other"];
+function openReject(){
+  if(!currentClaim && sel.size){ currentClaim=claims.find(c=>sel.has(c.id)); }
+  if(!currentClaim) return;
+  rejectReason=null;
+  $('rm-sub').textContent=currentClaim.id+' · '+currentClaim.title+' · '+currentClaim.est;
+  $('reasons').innerHTML=reasonList.map(r=>`<button class="reason" onclick="pickReason(this)">${r}</button>`).join('');
+  $('reqhint').style.display='none';
+  $('rejectModal').classList.add('on');
+}
+function pickReason(el){
+  document.querySelectorAll('.reason').forEach(r=>r.classList.remove('sel'));
+  el.classList.add('sel'); rejectReason=el.textContent;
+  $('reqhint').style.display='none';
+}
+function closeModals(){ document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('on')); }
+function confirmApprove(){
+  lastAction={claim:currentClaim,prev:currentClaim.status};
+  currentClaim.status="Approved"; currentClaim.rec=currentClaim.est;
+  closeModals(); refreshAll();
+  toast('success','Claim approved',`${currentClaim.id} · ${currentClaim.est} moves to payment processing`,true);
+}
+function confirmReject(){
+  if(!rejectReason){ $('reqhint').style.display='block'; return; }
+  lastAction={claim:currentClaim,prev:currentClaim.status};
+  currentClaim.status="Rejected"; currentClaim.rec=null;
+  closeModals(); refreshAll();
+  toast('warn','Claim rejected — owner notified',`Reason “${rejectReason}” logged and shared for resubmission`,true);
+}
+function bulkApprove(){
+  const first=claims.find(c=>sel.has(c.id));
+  if(first){ currentClaim=first; openApprove(); }
+}
+function undo(){
+  if(lastAction){ lastAction.claim.status=lastAction.prev; if(lastAction.prev!=="Paid") lastAction.claim.rec=null; lastAction=null; refreshAll(); }
+  hideToast();
+  toast('info','Decision reversed','The claim returned to review. This is also logged.',false);
+}
+function refreshAll(){ renderClaims(); renderDash(); if(currentClaim) renderDetailStatus(); updateBulk(); }
+/* toast */
+function toast(kind,title,sub,undoable){
+  clearTimeout(toastTimer);
+  const ic=$('t-ico');
+  ic.style.background = kind==='success' ? 'var(--succ-dot)' : kind==='warn' ? 'var(--warn-dot)' : 'var(--info-dot)';
+  ic.textContent = kind==='success' ? '✓' : kind==='warn' ? '!' : 'i';
+  ic.style.color='#fff';
+  $('t-title').textContent=title; $('t-sub').textContent=sub;
+  $('t-action').style.display = undoable?'block':'none';
+  $('toast').classList.add('on');
+  toastTimer=setTimeout(hideToast, kind==='warn'?7000:5000);
+}
+function hideToast(){ $('toast').classList.remove('on'); }
+/* report */
+const types=[["Inbound shipment discrepancies",673,.9,"$9,800 – $12,100"],["Refund mismatches",107,.35,"$2,400 – $2,900"],["Fulfilment fee overcharges",51,.22,"$1,600 – $1,750"],["Inventory reconciliation",37,.12,"$700 – $850"],["Returns not restocked",0,0,"$0"],["Aggregate warehouse analysis",0,0,"$0"]];
+$('breakdown').innerHTML=types.map(([n,c,p,v])=>`
+ <div style="display:flex;align-items:center;gap:16px;padding:13px 20px;border-top:1px solid var(--border-soft)">
+   <div style="width:300px;font-weight:500">${n}</div>
+   <div style="width:90px;font-size:13px;color:${c? 'var(--body)':'var(--faint)'}">${c} claims</div>
+   <div style="flex:1;max-width:360px;height:8px;border-radius:4px;background:var(--border-soft);overflow:hidden"><div class="bd-fill" data-p="${p*100}" style="width:0%;height:100%;background:var(--accent);border-radius:4px;transition:width .9s cubic-bezier(.2,.8,.2,1)"></div></div>
+   <div style="margin-left:auto;font-weight:500;color:${c? 'var(--ink)':'var(--faint)'}">${v}</div>
+ </div>`).join('');
+
+/* count-up + breakdown animations */
+function countUpIn(sel){
+  document.querySelectorAll(sel+' [data-cu]').forEach((el,i)=>{
+    const target=parseFloat(el.dataset.cu), pre=el.dataset.pre||'';
+    const dur=900+i*120, start=performance.now();
+    function tick(now){
+      let p=Math.min(1,(now-start)/dur);
+      p=1-Math.pow(1-p,3); /* easeOutCubic */
+      el.textContent=pre+Math.round(target*p).toLocaleString('en-US');
+      if(p<1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+function animateBreakdown(){
+  document.querySelectorAll('.bd-fill').forEach((b,i)=>{
+    b.style.transitionDelay='0s'; b.style.width='0%';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      b.style.transitionDelay=(i*70)+'ms';
+      b.style.width=b.dataset.p+'%';
+    }));
+  });
+}
+renderDash(); renderClaims(); go('dashboard');
+setTimeout(()=>{ const h=$('hint'); if(h){ h.style.transition='opacity 1s'; h.style.opacity='0'; setTimeout(()=>h.remove(),1000);} }, 12000);
+</script>
+</body>
+</html>
